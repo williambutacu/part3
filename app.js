@@ -1,11 +1,12 @@
 const { response } = require("express");
 const express= require("express")
 const morgan = require("morgan")
-
+const cors = require("cors")
 
 const app = express();
 
 app.use(express.json())
+app.use(cors())
 
 morgan.token("content",function(req,res){
    
@@ -20,17 +21,17 @@ let persons=[
     {
         id: 1,
         name: "Arto Hellas",
-        number: "093209"
+        phone: "093209"
     },
     {
         id: 3,
         name: "Dan Abramovic",
-        number: "093209"
+        phone: "093209"
     },
     {
         id: 5,
         name: "Iruka Sensei",
-        number: "093209"
+        phone: "093209"
     }
 ]
 
@@ -67,12 +68,12 @@ app.post("/api/persons", (req,res)=>{
     const newPerson ={
         id: generateId,
         name: req.body.name,
-        number: req.body.number
+        phone: req.body.phone
     }
 
     const existing = persons.find(person=> person.name === newPerson.name)
 
-    newPerson.name===undefined || newPerson.number===undefined ? 
+    newPerson.name===undefined || newPerson.phone===undefined ? 
     res.status(400).end("You need to define both the name and the number") :
     existing ? res.status(400).end("You need an unique name") :
     res.json(newPerson)
