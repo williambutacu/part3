@@ -78,8 +78,8 @@ app.post("/api/persons", (req,res)=>{
     newPerson.name===undefined || newPerson.phone===undefined ? 
     res.status(400).end("You need to define both the name and the number") :
     existing ? res.status(400).end("You need an unique name") :
+    persons=persons.concat(newPerson)
     res.json(newPerson)
-    persons.concat(newPerson)
 
 })
 
