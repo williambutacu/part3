@@ -76,26 +76,23 @@ app.delete("/api/persons/:id", (req,res,next)=>{
 
 })
 
-app.post("/api/persons", (req,res)=>{
+app.post("/api/persons", (req,res,next)=>{
     if(req.body.phone && req.body.name) {
-    const newPerson = new Person({
-        name: req.body.name,
-        phone: req.body.phone
-    })
+        const newPerson = new Person({
+            name: req.body.name,
+            phone: req.body.phone
+        })
 
-    newPerson.save()
-    .then(savedPerson=>
-        res.json(savedPerson))
-    .catch(error=>
-        console.log(error.message))
-    }
+        newPerson.save()
+        .then(savedPerson=>
+            res.json(savedPerson))
+        .catch(error=>
+            next(error))
+        }
 
-else{
-        res.status(400).json({error: "content missing"})
-    }
 })
 
-app.put("/api/persons/:id", (req,res)=>{
+app.put("/api/persons/:id", (req,res,next)=>{
     const person={
         name: req.body.name,
         phone: req.body.phone
@@ -118,10 +115,15 @@ app.use(unknownEndpoint)
 
 function errorHandler(error, req, res, next){
     console.error(error.message)
+    console.error(error)
 
     if (error.name === "CastError" && error.kind==="ObjectId"){
         return res.status(400).send({error:"malformated id"})
     }
+    else if (error.name==="ValidationError"){
+        return res.status(400).json({error:error.message})
+    }
+    
     
     next(error)
    
