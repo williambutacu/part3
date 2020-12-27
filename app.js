@@ -22,51 +22,99 @@ morgan.token("content",function(req,res){
 app.use(morgan(":method  :status :res[content-length] - :response-time ms :content"))
 
 app.get("/api/persons", (req,res)=>{
-    Person.find({}).then(people=>
-        res.json(people))
+    Person.find({})
+    .then(people=>
+        
+       res.json(people)
+        )
+    .catch(error=>
+        console.log(error.message))
+        
 })
 
 
 app.get("/info", (req,res)=>{
-    const arrayLength= persons.length
-    let today= new Date();
-    res.send(`<div>
-    <p>Phonebook has ${arrayLength+1} people</p>
-    <p> ${today}</p>
-    </div>`
-    )
-})
+    Person.find({})
+    .then(people=>
+        res.send(`<div>
+        <p>Phonebook has ${people.length} people</p>
+        <p> ${new Date()}</p>
+        </div>`        
+        ))
+    .catch(error=>
+        console.log(error.message))
 
-app.get("/api/persons/:id", (req,res)=>{
-    const id = Number(req.params.id)
-    const person = persons.find(person=> person.id===id)
-    person? res.json(person) : res.status(404).end()
-})
-
-app.delete("/api/persons/:id", (req,res)=>{
-    const id= Number(req.params.id) 
-    persons= persons.filter(person=> person.id !== id)
     
-    res.status(204).end()
+})
+
+app.get("/api/persons/:id", (req,res,next)=>{
+
+    Person.findById(req.params.id)
+    .then(person=>{
+        if (person){
+        res.json(person)
+    }
+    else {
+        res.status(404).end()
+    }
+    })
+    .catch(error=>{
+        next(error)
+    })
+
+    
+    
+})
+
+app.delete("/api/persons/:id", (req,res,next)=>{
+
+    Person.findByIdAndRemove(req.params.id)
+    .then(person=>
+        res.status(204).end())
+    .catch(error=>
+        next(error))
+
 })
 
 app.post("/api/persons", (req,res)=>{
-    const generateId= Math.floor(Math.random()*100)
-    const newPerson ={
-        id: generateId,
+    if(req.body.phone && req.body.name) {
+    const newPerson = new Person({
         name: req.body.name,
         phone: req.body.phone
+    })
+
+    newPerson.save()
+    .then(savedPerson=>
+        res.json(savedPerson))
+    .catch(error=>
+        console.log(error.message))
     }
 
-    const existing = persons.find(person=> person.name === newPerson.name)
-
-    newPerson.name===undefined || newPerson.phone===undefined ? 
-    res.status(400).end("You need to define both the name and the number") :
-    existing ? res.status(400).end("You need an unique name") :
-    persons=persons.concat(newPerson)
-    res.json(newPerson)
-
+else{
+        res.status(400).json({error: "content missing"})
+    }
 })
+
+
+function unknownEndpoint(req,res){
+    res.status(404).send({error:"unknown endpoint"})
+}
+
+app.use(unknownEndpoint)
+
+
+
+function errorHandler(error, req, res, next){
+    console.error(error.message)
+
+    if (error.name === "CastError" && error.kind==="ObjectId"){
+        return res.status(400).send({error:"malformated id"})
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
