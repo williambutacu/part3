@@ -95,6 +95,18 @@ else{
     }
 })
 
+app.put("/api/persons/:id", (req,res)=>{
+    const person={
+        name: req.body.name,
+        phone: req.body.phone
+    }
+
+    Person.findByIdAndUpdate(req.params.id, person, {new: true})
+        .then(updatedPerson=>
+            res.json(updatedPerson))
+        .catch(error=>
+            next(error))
+})
 
 function unknownEndpoint(req,res){
     res.status(404).send({error:"unknown endpoint"})
@@ -110,8 +122,9 @@ function errorHandler(error, req, res, next){
     if (error.name === "CastError" && error.kind==="ObjectId"){
         return res.status(400).send({error:"malformated id"})
     }
-
+    
     next(error)
+   
 }
 
 app.use(errorHandler)
